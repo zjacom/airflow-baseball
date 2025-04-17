@@ -1,0 +1,96 @@
+[2025-04-17T14:06:44.139+0000] {taskinstance.py:1083} INFO - Dependencies all met for <TaskInstance: baseball_hitter_scraping.scrape_players_90001_to_99811 manual__2025-04-17T14:06:41.118024+00:00 [queued]>
+[2025-04-17T14:06:44.147+0000] {taskinstance.py:1083} INFO - Dependencies all met for <TaskInstance: baseball_hitter_scraping.scrape_players_90001_to_99811 manual__2025-04-17T14:06:41.118024+00:00 [queued]>
+[2025-04-17T14:06:44.147+0000] {taskinstance.py:1279} INFO - 
+--------------------------------------------------------------------------------
+[2025-04-17T14:06:44.148+0000] {taskinstance.py:1280} INFO - Starting attempt 1 of 4
+[2025-04-17T14:06:44.148+0000] {taskinstance.py:1281} INFO - 
+--------------------------------------------------------------------------------
+[2025-04-17T14:06:44.155+0000] {taskinstance.py:1300} INFO - Executing <Task(PythonOperator): scrape_players_90001_to_99811> on 2025-04-17 14:06:41.118024+00:00
+[2025-04-17T14:06:44.158+0000] {standard_task_runner.py:55} INFO - Started process 1044 to run task
+[2025-04-17T14:06:44.161+0000] {standard_task_runner.py:82} INFO - Running: ['***', 'tasks', 'run', 'baseball_hitter_scraping', 'scrape_players_90001_to_99811', 'manual__2025-04-17T14:06:41.118024+00:00', '--job-id', '7', '--raw', '--subdir', 'DAGS_FOLDER/hitter.py', '--cfg-path', '/tmp/tmpa6_lhf0x']
+[2025-04-17T14:06:44.162+0000] {standard_task_runner.py:83} INFO - Job 7: Subtask scrape_players_90001_to_99811
+[2025-04-17T14:06:44.200+0000] {task_command.py:388} INFO - Running <TaskInstance: baseball_hitter_scraping.scrape_players_90001_to_99811 manual__2025-04-17T14:06:41.118024+00:00 [running]> on host d8e5b077da40
+[2025-04-17T14:06:44.236+0000] {taskinstance.py:1507} INFO - Exporting the following env vars:
+AIRFLOW_CTX_DAG_OWNER=***
+AIRFLOW_CTX_DAG_ID=baseball_hitter_scraping
+AIRFLOW_CTX_TASK_ID=scrape_players_90001_to_99811
+AIRFLOW_CTX_EXECUTION_DATE=2025-04-17T14:06:41.118024+00:00
+AIRFLOW_CTX_TRY_NUMBER=1
+AIRFLOW_CTX_DAG_RUN_ID=manual__2025-04-17T14:06:41.118024+00:00
+[2025-04-17T14:08:33.949+0000] {hitter.py:199} WARNING - 페이지 로드 실패 (재시도 1/3): https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=90228, 오류: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=90228", waiting until "load"
+
+[2025-04-17T14:10:31.857+0000] {hitter.py:199} WARNING - 페이지 로드 실패 (재시도 1/3): https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=90529, 오류: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=90529", waiting until "load"
+
+[2025-04-17T14:11:42.321+0000] {hitter.py:199} WARNING - 페이지 로드 실패 (재시도 1/3): https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=90676, 오류: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=90676", waiting until "load"
+
+[2025-04-17T14:12:50.996+0000] {hitter.py:199} WARNING - 페이지 로드 실패 (재시도 1/3): https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=90830, 오류: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=90830", waiting until "load"
+
+[2025-04-17T14:14:10.980+0000] {hitter.py:199} WARNING - 페이지 로드 실패 (재시도 1/3): https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=91049, 오류: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=91049", waiting until "load"
+
+[2025-04-17T14:15:21.215+0000] {hitter.py:199} WARNING - 페이지 로드 실패 (재시도 1/3): https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=91238, 오류: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=91238", waiting until "load"
+
+[2025-04-17T14:16:45.091+0000] {hitter.py:199} WARNING - 페이지 로드 실패 (재시도 1/3): https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=91468, 오류: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=91468", waiting until "load"
+
+[2025-04-17T14:19:30.584+0000] {hitter.py:199} WARNING - 페이지 로드 실패 (재시도 1/3): https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=91807, 오류: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=91807", waiting until "load"
+
+[2025-04-17T14:24:15.844+0000] {hitter.py:199} WARNING - 페이지 로드 실패 (재시도 1/3): https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=92650, 오류: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=92650", waiting until "load"
+
+[2025-04-17T14:25:28.887+0000] {hitter.py:199} WARNING - 페이지 로드 실패 (재시도 1/3): https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=92792, 오류: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=92792", waiting until "load"
+
+[2025-04-17T14:26:11.434+0000] {hitter.py:199} WARNING - 페이지 로드 실패 (재시도 1/3): https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=92846, 오류: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=92846", waiting until "load"
+
+[2025-04-17T14:36:40.748+0000] {local_task_job.py:272} WARNING - State of this instance has been externally set to up_for_retry. Terminating instance.
+[2025-04-17T14:36:40.749+0000] {process_utils.py:129} INFO - Sending Signals.SIGTERM to group 1044. PIDs of all processes in the group: [1217, 1348, 1356, 1357, 1375, 1405, 1374, 1044]
+[2025-04-17T14:36:40.749+0000] {process_utils.py:84} INFO - Sending the signal Signals.SIGTERM to group 1044
+[2025-04-17T14:36:40.749+0000] {taskinstance.py:1479} ERROR - Received SIGTERM. Terminating subprocesses.
+[2025-04-17T14:36:40.755+0000] {taskinstance.py:1768} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/operators/python.py", line 175, in execute
+    return_value = self.execute_callable()
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/operators/python.py", line 192, in execute_callable
+    return self.python_callable(*self.op_args, **self.op_kwargs)
+  File "/opt/airflow/dags/hitter.py", line 407, in scrape_player_range
+    loop.run_until_complete(scraper.run(start_id=start_id, end_id=end_id))
+  File "/usr/local/lib/python3.10/asyncio/base_events.py", line 636, in run_until_complete
+    self.run_forever()
+  File "/usr/local/lib/python3.10/asyncio/base_events.py", line 603, in run_forever
+    self._run_once()
+  File "/usr/local/lib/python3.10/asyncio/base_events.py", line 1868, in _run_once
+    event_list = self._selector.select(timeout)
+  File "/usr/local/lib/python3.10/selectors.py", line 469, in select
+    fd_event_list = self._selector.poll(timeout, max_ev)
+  File "/home/airflow/.local/lib/python3.10/site-packages/airflow/models/taskinstance.py", line 1481, in signal_handler
+    raise AirflowException("Task received SIGTERM signal")
+airflow.exceptions.AirflowException: Task received SIGTERM signal
+[2025-04-17T14:36:40.757+0000] {taskinstance.py:1318} INFO - Marking task as UP_FOR_RETRY. dag_id=baseball_hitter_scraping, task_id=scrape_players_90001_to_99811, execution_date=20250417T140641, start_date=20250417T140644, end_date=20250417T143640
+[2025-04-17T14:36:40.763+0000] {standard_task_runner.py:100} ERROR - Failed to execute job 7 for task scrape_players_90001_to_99811 (Task received SIGTERM signal; 1044)
+[2025-04-17T14:36:40.805+0000] {process_utils.py:79} INFO - Process psutil.Process(pid=1357, status='terminated', started='14:06:48') (1357) terminated with exit code None
+[2025-04-17T14:36:40.806+0000] {process_utils.py:79} INFO - Process psutil.Process(pid=1374, status='terminated', started='14:06:48') (1374) terminated with exit code None
+[2025-04-17T14:36:40.806+0000] {process_utils.py:79} INFO - Process psutil.Process(pid=1348, status='terminated', started='14:06:48') (1348) terminated with exit code None
+[2025-04-17T14:36:40.806+0000] {process_utils.py:79} INFO - Process psutil.Process(pid=1217, status='terminated', started='14:06:48') (1217) terminated with exit code None
+[2025-04-17T14:36:40.806+0000] {process_utils.py:79} INFO - Process psutil.Process(pid=1356, status='terminated', started='14:06:48') (1356) terminated with exit code None
+[2025-04-17T14:36:40.806+0000] {process_utils.py:79} INFO - Process psutil.Process(pid=1405, status='terminated', started='14:06:48') (1405) terminated with exit code None
+[2025-04-17T14:36:40.806+0000] {process_utils.py:79} INFO - Process psutil.Process(pid=1375, status='terminated', started='14:06:48') (1375) terminated with exit code None
+[2025-04-17T14:36:40.806+0000] {process_utils.py:79} INFO - Process psutil.Process(pid=1044, status='terminated', exitcode=1, started='14:06:43') (1044) terminated with exit code 1
