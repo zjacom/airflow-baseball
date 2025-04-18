@@ -191,7 +191,7 @@ class BaseballDataScraper:
         query = self._get_upsert_query(table_name)
         await self.db_manager.execute_upsert(query, data)
 
-    async def goto_with_retry(self, page: Page, url: str, max_retries: int = 3):
+    async def goto_with_retry(self, page, url: str, max_retries: int = 3):
         for attempt in range(max_retries):
             try:
                 await page.goto(url, wait_until="load", timeout=30000)  # 30초 타임아웃 설정
@@ -203,7 +203,7 @@ class BaseballDataScraper:
                 logger.warning(f"페이지 로드 실패 (재시도 {attempt + 1}/{max_retries}): {url}, 오류: {e}")
                 await asyncio.sleep(2)  # 재시도 전 2초 대기
 
-    async def check_player(self, page: Page, player_id: int) -> bool:
+    async def check_player(self, page, player_id: int) -> bool:
         url = f"https://www.koreabaseball.com/Record/Player/PitcherDetail/Basic.aspx?playerId={player_id}"
         await self.goto_with_retry(page, url)
         
@@ -217,133 +217,137 @@ class BaseballDataScraper:
             logger.warning(f"플레이어 {player_id} 확인 중 오류: {e}")
             return False
 
-    async def process_player_data(self, page: Page, player_id: int):
-        is_record = await page.locator('//*[@id="contents"]/div[2]/div[2]/div[2]/table/tbody/tr/td').count()
-        if is_record == 1:
-            return
+    async def process_player_data(self, page, player_id: int):
+        try:
+            is_record = await page.locator('//*[@id="contents"]/div[2]/div[2]/div[2]/table/tbody/tr/td').count()
+            if is_record == 1:
+                return
 
-        self.count += 1
-        player_name = await page.locator('//*[@id="cphContents_cphContents_cphContents_playerProfile_lblName"]').text_content()
-        player_name = player_name.strip()
+            self.count += 1
+            player_name = await page.locator('//*[@id="cphContents_cphContents_cphContents_playerProfile_lblName"]').text_content()
+            player_name = player_name.strip()
 
-        # 기본 정보 추출
-        first_row = page.locator('//*[@id="contents"]/div[2]/div[2]/div[2]/table/tbody/tr').first
-        first_td_elements = first_row.locator('td')
-        first_td_values = []
-        for i in range(await first_td_elements.count()):
-            text = await first_td_elements.nth(i).text_content()
-            first_td_values.append((text or "").strip())
-        
-        team_name, era, games, cg, sho, wins, loses, sv, hld, wpct, tbf, np, ip, hits, doubles, triples, hr = first_td_values
-        team_name, era, games, cg, sho, wins, loses, sv, hld, wpct, tbf, np, hits, doubles, triples, hr = (
-            team_name.strip(), self.str_to_float(era), int(games), int(cg), int(sho), int(wins), int(loses), 
-            int(sv), int(hld), self.str_to_float(wpct), int(tbf), int(np), int(hits), int(doubles), int(triples), int(hr)
-        )
-
-        # 추가 정보 추출
-        second_row = page.locator('//*[@id="contents"]/div[2]/div[2]/div[3]/table/tbody/tr').first
-        second_td_elements = second_row.locator('td')
-        second_td_values = []
-        for i in range(await second_td_elements.count()):
-            text = await second_td_elements.nth(i).text_content()
-            second_td_values.append((text or "").strip())
-        
-        sac, sf, bb, ibb, so, wp, bk, runs, er, bsv, whip, avg, qs = second_td_values
-        sac, sf, bb, ibb, so, wp, bk, runs, er, bsv, whip, avg, qs = (
-            int(sac), int(sf), int(bb), int(ibb), int(so), int(wp), int(bk), 
-            int(runs), int(er), int(bsv),
-            self.str_to_float(whip), self.str_to_float(avg), int(qs)
-        )
-
-        # pitchers 테이블에 데이터 삽입
-        data = (player_id, player_name, team_name, era, games, cg, sho, wins, loses, sv, hld, wpct, tbf, np, ip, hits, doubles, triples, hr, 
-                sac, sf, bb, ibb, so, wp, bk, runs, er, bsv, whip, avg, qs)
-        await self.upsert_data("pitchers", data)
-
-        # 최근 10경기 데이터 처리
-        recent_10_games = page.locator('//*[@id="contents"]/div[2]/div[2]/div[4]/table/tbody').first
-        recent_tr_elements = recent_10_games.locator('tr')
-        for i in range(await recent_tr_elements.count()):
-            recent_row = recent_tr_elements.nth(i)
-            recent_td_elements = recent_row.locator('td')
-            recent_td_count = await recent_td_elements.count()
-
-            recent_td_values = []
-            for j in range(recent_td_count):
-                recent_text = await recent_td_elements.nth(j).text_content()
-                recent_td_values.append((recent_text or "").strip())
+            # 기본 정보 추출
+            first_row = page.locator('//*[@id="contents"]/div[2]/div[2]/div[2]/table/tbody/tr').first
+            first_td_elements = first_row.locator('td')
+            first_td_values = []
+            for i in range(await first_td_elements.count()):
+                text = await first_td_elements.nth(i).text_content()
+                first_td_values.append((text or "").strip())
             
-            r_date, r_opponent, r_result, r_era, r_tbf, r_ip, r_hits, r_hr, r_bb, r_hbp, r_so, r_runs, r_er, r_avg = recent_td_values
-            
-            # r_date 문자열 변환
-            current_year = datetime.now().year
-            r_date = f"{current_year}-{r_date.replace('.', '-')}"
-            r_opponent = r_opponent.strip()
-            r_result = r_result.strip()
-            if not r_result:
-                r_result = None
-            r_era, r_tbf, r_hits, r_hr, r_bb, r_hbp, r_so, r_runs, r_er, r_avg = (
-                self.str_to_float(r_era), int(r_tbf), int(r_hits), int(r_hr),
-                int(r_bb), int(r_hbp), int(r_so), int(r_runs), int(r_er), self.str_to_float(r_avg)  
+            team_name, era, games, cg, sho, wins, loses, sv, hld, wpct, tbf, np, ip, hits, doubles, triples, hr = first_td_values
+            team_name, era, games, cg, sho, wins, loses, sv, hld, wpct, tbf, np, hits, doubles, triples, hr = (
+                team_name.strip(), self.str_to_float(era), int(games), int(cg), int(sho), int(wins), int(loses), 
+                int(sv), int(hld), self.str_to_float(wpct), int(tbf), int(np), int(hits), int(doubles), int(triples), int(hr)
             )
 
-            # 일자별 기록 테이블에 데이터 삽입
-            data = (player_id, r_date, r_opponent, r_result, r_era, r_tbf, r_ip,
-                    r_hits, r_hr, r_bb, r_hbp, r_so, r_runs, r_er, r_avg)
-            await self.upsert_data("pitcher_games", data)
-
-        # 상대별 기록 처리
-        url = f"https://www.koreabaseball.com/Record/Player/PitcherDetail/Game.aspx?playerId={player_id}"
-        await self.goto_with_retry(page, url)
-
-        case_by_opponent = page.locator('//*[@id="contents"]/div[2]/div[2]/div[1]/table/tbody')
-        cbo_tr_elements = case_by_opponent.locator('tr')
-        for i in range(await cbo_tr_elements.count()):
-            cbo_row = cbo_tr_elements.nth(i)
-            cbo_td_elements = cbo_row.locator('td')
-            cbo_td_count = await cbo_td_elements.count()
-
-            cbo_td_values = []
-            for j in range(cbo_td_count):
-                cbo_text = await cbo_td_elements.nth(j).text_content()
-                cbo_td_values.append((cbo_text or "").strip())
+            # 추가 정보 추출
+            second_row = page.locator('//*[@id="contents"]/div[2]/div[2]/div[3]/table/tbody/tr').first
+            second_td_elements = second_row.locator('td')
+            second_td_values = []
+            for i in range(await second_td_elements.count()):
+                text = await second_td_elements.nth(i).text_content()
+                second_td_values.append((text or "").strip())
             
-            o_opponent, o_games, o_era, o_wins, o_loses, o_sv, o_hld, o_wpct, o_tbf, o_ip, o_hits, o_hr, o_bb, o_hbp, o_so, o_runs, o_er, o_avg = cbo_td_values
-            o_opponent, o_games, o_era, o_wins, o_loses, o_sv, o_hld, o_wpct, o_tbf, o_hits, o_hr, o_bb, o_hbp, o_so, o_runs, o_er, o_avg = (
-                o_opponent.strip(), int(o_games), self.str_to_float(o_era), int(o_wins), int(o_loses), int(o_sv), int(o_hld),
-                self.str_to_float(o_wpct), int(o_tbf), int(o_hits), int(o_hr), int(o_bb), int(o_hbp), int(o_so), int(o_runs), int(o_er),
-                self.str_to_float(o_avg)
+            sac, sf, bb, ibb, so, wp, bk, runs, er, bsv, whip, avg, qs = second_td_values
+            sac, sf, bb, ibb, so, wp, bk, runs, er, bsv, whip, avg, qs = (
+                int(sac), int(sf), int(bb), int(ibb), int(so), int(wp), int(bk), 
+                int(runs), int(er), int(bsv),
+                self.str_to_float(whip), self.str_to_float(avg), int(qs)
             )
 
-            # 상대별 테이블
-            data = (player_id, o_opponent, o_games, o_era, o_wins, o_loses, o_sv, o_hld, o_wpct,
-                    o_tbf, o_ip, o_hits, o_hr, o_bb, o_hbp, o_so, o_runs, o_er, o_avg)
-            await self.upsert_data("pitcher_opponents", data)
+            # pitchers 테이블에 데이터 삽입
+            data = (player_id, player_name, team_name, era, games, cg, sho, wins, loses, sv, hld, wpct, tbf, np, ip, hits, doubles, triples, hr, 
+                    sac, sf, bb, ibb, so, wp, bk, runs, er, bsv, whip, avg, qs)
+            await self.upsert_data("pitchers", data)
 
-        # 구장별 기록 처리
-        case_by_stadium = page.locator('//*[@id="contents"]/div[2]/div[2]/div[2]/table/tbody')
-        cbs_tr_elements = case_by_stadium.locator('tr')
-        for i in range(await cbs_tr_elements.count()):
-            cbs_row = cbs_tr_elements.nth(i)
-            cbs_td_elements = cbs_row.locator('td')
-            cbs_td_count = await cbs_td_elements.count()
+            # 최근 10경기 데이터 처리
+            recent_10_games = page.locator('//*[@id="contents"]/div[2]/div[2]/div[4]/table/tbody').first
+            recent_tr_elements = recent_10_games.locator('tr')
+            for i in range(await recent_tr_elements.count()):
+                recent_row = recent_tr_elements.nth(i)
+                recent_td_elements = recent_row.locator('td')
+                recent_td_count = await recent_td_elements.count()
 
-            cbs_td_values = []
-            for j in range(cbs_td_count):
-                cbs_text = await cbs_td_elements.nth(j).text_content()
-                cbs_td_values.append((cbs_text or "").strip())
-            
-            s_stadium, s_games, s_era, s_wins, s_loses, s_sv, s_hld, s_wpct, s_tbf, s_ip, s_hits, s_hr, s_bb, s_hbp, s_so, s_runs, s_er, s_avg = cbs_td_values
-            s_stadium, s_games, s_era, s_wins, s_loses, s_sv, s_hld, s_wpct, s_tbf, s_hits, s_hr, s_bb, s_hbp, s_so, s_runs, s_er, s_avg = (
-                s_stadium.strip(), int(s_games), self.str_to_float(s_era), int(s_wins), int(s_loses), int(s_sv), int(s_hld),
-                self.str_to_float(s_wpct), int(s_tbf), int(s_hits), int(s_hr), int(s_bb), int(s_hbp), int(s_so), int(s_runs), int(s_er),
-                self.str_to_float(s_avg)
-            )
+                recent_td_values = []
+                for j in range(recent_td_count):
+                    recent_text = await recent_td_elements.nth(j).text_content()
+                    recent_td_values.append((recent_text or "").strip())
+                
+                r_date, r_opponent, r_result, r_era, r_tbf, r_ip, r_hits, r_hr, r_bb, r_hbp, r_so, r_runs, r_er, r_avg = recent_td_values
+                
+                # r_date 문자열 변환
+                current_year = datetime.now().year
+                r_date = f"{current_year}-{r_date.replace('.', '-')}"
+                r_opponent = r_opponent.strip()
+                r_result = r_result.strip()
+                if not r_result:
+                    r_result = None
+                r_era, r_tbf, r_hits, r_hr, r_bb, r_hbp, r_so, r_runs, r_er, r_avg = (
+                    self.str_to_float(r_era), int(r_tbf), int(r_hits), int(r_hr),
+                    int(r_bb), int(r_hbp), int(r_so), int(r_runs), int(r_er), self.str_to_float(r_avg)  
+                )
 
-            # 구장별 테이블
-            data = (player_id, s_stadium, s_games, s_era, s_wins, s_loses, s_sv, s_hld, s_wpct, s_tbf,
-                    s_ip, s_hits, s_hr, s_bb, s_hbp, s_so, s_runs, s_er, s_avg)
-            await self.upsert_data("pitcher_stadiums", data)
+                # 일자별 기록 테이블에 데이터 삽입
+                data = (player_id, r_date, r_opponent, r_result, r_era, r_tbf, r_ip,
+                        r_hits, r_hr, r_bb, r_hbp, r_so, r_runs, r_er, r_avg)
+                await self.upsert_data("pitcher_games", data)
+
+            # 상대별 기록 처리
+            url = f"https://www.koreabaseball.com/Record/Player/PitcherDetail/Game.aspx?playerId={player_id}"
+            await self.goto_with_retry(page, url)
+
+            case_by_opponent = page.locator('//*[@id="contents"]/div[2]/div[2]/div[1]/table/tbody')
+            cbo_tr_elements = case_by_opponent.locator('tr')
+            for i in range(await cbo_tr_elements.count()):
+                cbo_row = cbo_tr_elements.nth(i)
+                cbo_td_elements = cbo_row.locator('td')
+                cbo_td_count = await cbo_td_elements.count()
+
+                cbo_td_values = []
+                for j in range(cbo_td_count):
+                    cbo_text = await cbo_td_elements.nth(j).text_content()
+                    cbo_td_values.append((cbo_text or "").strip())
+                
+                o_opponent, o_games, o_era, o_wins, o_loses, o_sv, o_hld, o_wpct, o_tbf, o_ip, o_hits, o_hr, o_bb, o_hbp, o_so, o_runs, o_er, o_avg = cbo_td_values
+                o_opponent, o_games, o_era, o_wins, o_loses, o_sv, o_hld, o_wpct, o_tbf, o_hits, o_hr, o_bb, o_hbp, o_so, o_runs, o_er, o_avg = (
+                    o_opponent.strip(), int(o_games), self.str_to_float(o_era), int(o_wins), int(o_loses), int(o_sv), int(o_hld),
+                    self.str_to_float(o_wpct), int(o_tbf), int(o_hits), int(o_hr), int(o_bb), int(o_hbp), int(o_so), int(o_runs), int(o_er),
+                    self.str_to_float(o_avg)
+                )
+
+                # 상대별 테이블
+                data = (player_id, o_opponent, o_games, o_era, o_wins, o_loses, o_sv, o_hld, o_wpct,
+                        o_tbf, o_ip, o_hits, o_hr, o_bb, o_hbp, o_so, o_runs, o_er, o_avg)
+                await self.upsert_data("pitcher_opponents", data)
+
+            # 구장별 기록 처리
+            case_by_stadium = page.locator('//*[@id="contents"]/div[2]/div[2]/div[2]/table/tbody')
+            cbs_tr_elements = case_by_stadium.locator('tr')
+            for i in range(await cbs_tr_elements.count()):
+                cbs_row = cbs_tr_elements.nth(i)
+                cbs_td_elements = cbs_row.locator('td')
+                cbs_td_count = await cbs_td_elements.count()
+
+                cbs_td_values = []
+                for j in range(cbs_td_count):
+                    cbs_text = await cbs_td_elements.nth(j).text_content()
+                    cbs_td_values.append((cbs_text or "").strip())
+                
+                s_stadium, s_games, s_era, s_wins, s_loses, s_sv, s_hld, s_wpct, s_tbf, s_ip, s_hits, s_hr, s_bb, s_hbp, s_so, s_runs, s_er, s_avg = cbs_td_values
+                s_stadium, s_games, s_era, s_wins, s_loses, s_sv, s_hld, s_wpct, s_tbf, s_hits, s_hr, s_bb, s_hbp, s_so, s_runs, s_er, s_avg = (
+                    s_stadium.strip(), int(s_games), self.str_to_float(s_era), int(s_wins), int(s_loses), int(s_sv), int(s_hld),
+                    self.str_to_float(s_wpct), int(s_tbf), int(s_hits), int(s_hr), int(s_bb), int(s_hbp), int(s_so), int(s_runs), int(s_er),
+                    self.str_to_float(s_avg)
+                )
+
+                # 구장별 테이블
+                data = (player_id, s_stadium, s_games, s_era, s_wins, s_loses, s_sv, s_hld, s_wpct, s_tbf,
+                        s_ip, s_hits, s_hr, s_bb, s_hbp, s_so, s_runs, s_er, s_avg)
+                await self.upsert_data("pitcher_stadiums", data)
+                
+        except Exception as e:
+            logger.error(f"플레이어 {player_id} 데이터 처리 중 오류: {e}")
 
     async def run(self, start_id: int, end_id: int):
         # Playwright를 여기서 임포트합니다 (동적 임포트)
