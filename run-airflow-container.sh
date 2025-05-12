@@ -8,7 +8,7 @@ AIRFLOW_GID=$(id -g)
 echo "AIRFLOW_UID=${AIRFLOW_UID}" > .env
 
 # 폴더 목록
-dirs=("logs" "dags" "plugins", "data")
+dirs=("logs" "dags" "plugins" "data")
 
 # 각 폴더가 없다면 생성하고, 소유권 변경
 for dir in "${dirs[@]}"; do
