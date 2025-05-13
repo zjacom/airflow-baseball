@@ -141,11 +141,14 @@ def _process_hitters_metrics_with_park_factor():
             # wRC_plus 계산
             try:
                 wRC_plus = ((wRC / pa) / ((league_wRC / league_pa) / park_factor)) * 100
-            except ZeroDivisionError as e:
+            except ZeroDivisionError:
                 print(f"Division Error: {hitter_id}")
                 wRC_plus = None
             # OPS_plus 계산
-            ops_plus = (100 / park_factor) * ((obp / league_obp) + (slg / league_slg) - 1)
+            try:
+                ops_plus = (100 / park_factor) * ((obp / league_obp) + (slg / league_slg) - 1)
+            except ZeroDivisionError:
+                print(stadium, park_factor)
 
             data = {
                 "hitter_id": hitter_id,
