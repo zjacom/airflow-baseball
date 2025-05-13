@@ -139,7 +139,11 @@ def _process_hitters_metrics_with_park_factor():
             # 파크팩터 가져오기
             park_factor = park_factor_dic[stadium]
             # wRC_plus 계산
-            wRC_plus = ((wRC / pa) / ((league_wRC / league_pa) / park_factor)) * 100
+            try:
+                wRC_plus = ((wRC / pa) / ((league_wRC / league_pa) / park_factor)) * 100
+            except ZeroDivisionError as e:
+                print(f"Division Error: {hitter_id}")
+                wRC_plus = None
             # OPS_plus 계산
             ops_plus = (100 / park_factor) * ((obp / league_obp) + (slg / league_slg) - 1)
 
